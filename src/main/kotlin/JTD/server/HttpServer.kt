@@ -5,7 +5,9 @@ import JTD.game.handleConnection
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
+import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpStatusCode
+import io.ktor.jackson.jackson
 import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.post
@@ -22,6 +24,11 @@ fun Application.httpServer() {
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(5)
     }
+    install(ContentNegotiation) {
+        jackson {
+
+        }
+    }
 
     routing {
         get {
@@ -37,6 +44,19 @@ fun Application.httpServer() {
             post {
                 val gameId = GamesManager.createGame()
                 call.respond("Game id: $gameId")
+            }
+
+            route("/{game_id}") {
+                get {
+                    val gameId = call.parameters["game_id"]
+                    println("Incoming request for: $gameId")
+                    if (gameId == null) {
+                        call.respond(HttpStatusCode.BadRequest)
+                    } else {
+                        val gameState = GamesManager.getGameState(gameId.toInt())
+                        call.respondOr404(gameState)
+                    }
+                }
             }
         }
 

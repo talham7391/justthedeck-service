@@ -14,6 +14,15 @@ object GamesManager {
         return gameId
     }
 
+    suspend fun getGameState(gameId: Int): GameState? {
+        try {
+            val game = ActiveGames.get(gameId)
+            return game.getState()
+        } catch (e: GameDoesNotExist) {
+            return null
+        }
+    }
+
     suspend fun deleteGame(gameId: Int) {
         ActiveGames.remove(gameId)
         GameId.free(gameId)
