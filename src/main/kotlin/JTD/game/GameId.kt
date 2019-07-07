@@ -8,7 +8,7 @@ import java.util.*
 import kotlin.math.pow
 
 
-val NUM_GAME_ID_DIGITS = 1
+const val NUM_GAME_ID_DIGITS = 1
 
 
 private sealed class GameIdMessage
@@ -45,6 +45,7 @@ object GameId {
     suspend fun generate(): Int {
         val gameId = CompletableDeferred<Int>()
         gameIdActor.send(GetGameId(gameId))
+        val id = gameId.await()
         return gameId.await()
     }
 

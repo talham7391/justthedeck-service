@@ -3,12 +3,16 @@ package JTD.game
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.close
 import io.ktor.websocket.WebSocketServerSession
+import org.slf4j.LoggerFactory
 
 
 object GamesManager {
+    private val logger = LoggerFactory.getLogger(GamesManager.javaClass)
+
     suspend fun createGame(): Int {
         val gameId = GameId.generate()
         ActiveGames.set(gameId, Game(gameId))
+        logger.info(gameId, "Created")
         return gameId
     }
 
@@ -24,6 +28,7 @@ object GamesManager {
     suspend fun deleteGame(gameId: Int) {
         ActiveGames.remove(gameId)
         GameId.free(gameId)
+        logger.info(gameId, "Deleted")
     }
 
     suspend fun relayConnection(gameId: Int, conn: WebSocketServerSession) {
