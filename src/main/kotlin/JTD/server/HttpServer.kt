@@ -43,13 +43,12 @@ fun Application.httpServer() {
         route("/games") {
             post {
                 val gameId = GamesManager.createGame()
-                call.respond("Game id: $gameId")
+                call.respond(GamePostResponse(gameId))
             }
 
             route("/{game_id}") {
                 get {
                     val gameId = call.parameters["game_id"]
-                    println("Incoming request for: $gameId")
                     if (gameId == null) {
                         call.respond(HttpStatusCode.BadRequest)
                     } else {
@@ -63,3 +62,5 @@ fun Application.httpServer() {
         webSocket("/ws/{game_id}", handler = WebSocketServerSession::handleConnection)
     }
 }
+
+data class GamePostResponse(val gameId: Int)
