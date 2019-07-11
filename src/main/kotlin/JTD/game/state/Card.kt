@@ -7,6 +7,7 @@ interface Card {
     val number: Int
 }
 
+
 enum class Side {
     FACE_UP,
     FACE_DOWN

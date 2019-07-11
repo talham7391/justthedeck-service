@@ -4,13 +4,14 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.launch
 
 
 sealed class GameStateMessage
 
 data class PlayerConnected(
     val name: String,
-    val response: CompletableDeferred<ReceiveChannel<StateUpdateMessage>>
+    val response: CompletableDeferred<ReceiveChannel<ServerMessage>>
 ) : GameStateMessage()
 
 data class PlayerDisconneced(
@@ -29,9 +30,10 @@ data class GetCardsOnTable(
 ) : GameStateMessage()
 
 
-sealed class StateUpdateMessage
+sealed class ServerMessage(val action: String)
 
-object Test : StateUpdateMessage()
+data class PrintMessage(val message: String) : ServerMessage("PRINT_MESSAGE")
+data class PlayerStatesUpdate(val states: Collection<PlayerState>) : ServerMessage("PLAYER_STATES")
 
 fun CoroutineScope.gameStateActor() = actor<GameStateMessage> {
     val cardsOnTable = mutableListOf<CardOnTable>()
@@ -42,13 +44,24 @@ fun CoroutineScope.gameStateActor() = actor<GameStateMessage> {
 
             is PlayerConnected -> {
                 val playerState = playerStates[mssg.name].revive() ?: newPlayerState(mssg.name)
+                playerState.isConnected = true
                 playerStates[mssg.name] = playerState
-
                 mssg.response.complete(playerState.update)
+
+                playerStates.forEach { _, ps ->
+                    launch { ps.update.send(PlayerStatesUpdate(playerStates.values)) }
+                }
             }
 
             is PlayerDisconneced -> {
-                playerStates[mssg.name]?.update?.cancel()
+                playerStates[mssg.name]?.let {
+                    it.update.cancel()
+                    it.isConnected = false
+                }
+
+                playerStates.forEach { _, ps ->
+                    launch { ps.update.send(PlayerStatesUpdate(playerStates.values)) }
+                }
             }
 
             is AddCardsToTable -> {

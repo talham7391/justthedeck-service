@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.ktor.features.callId
+import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
+import io.ktor.http.cio.websocket.send
 import io.ktor.websocket.WebSocketServerSession
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.GlobalScope
@@ -32,7 +34,7 @@ class Game(val gameId: Int) {
         val nameMessage = objectMapper.readValue<NameMessage>(incoming.receive().readBytes())
         val name = nameMessage.data.name
 
-        val stateUpdates = CompletableDeferred<ReceiveChannel<StateUpdateMessage>>()
+        val stateUpdates = CompletableDeferred<ReceiveChannel<ServerMessage>>()
         state.send(PlayerConnected(name, stateUpdates))
 
         val updates = stateUpdates.await()
@@ -44,8 +46,12 @@ class Game(val gameId: Int) {
 
                     updates.onReceive {
                         when (it) {
-                            is Test -> {
-                                logger.debug(gameId, call.callId, "Test from server")
+                            is PrintMessage -> {
+                                logger.debug(gameId, call.callId, it.message)
+                            }
+
+                            is PlayerStatesUpdate -> {
+                                send(objectMapper.writeValueAsBytes(it))
                             }
                         }
                     }

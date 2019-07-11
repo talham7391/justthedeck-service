@@ -1,5 +1,6 @@
 package JTD.game.state
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import kotlinx.coroutines.channels.Channel
 
 
@@ -7,7 +8,9 @@ data class PlayerState(
     val name: String,
     val collectedCards: List<Card>,
     val cardsInHand: List<Card>,
-    val update: Channel<StateUpdateMessage>
+
+    var isConnected: Boolean,
+    @JsonIgnore val update: Channel<ServerMessage>
 )
 
 
@@ -16,8 +19,8 @@ fun newPlayerState(
     collectedCards: List<Card> = emptyList(),
     cardsInHand: List<Card> = emptyList()
 ): PlayerState {
-    val channel = Channel<StateUpdateMessage>()
-    return PlayerState(name, collectedCards, cardsInHand, channel)
+    val channel = Channel<ServerMessage>()
+    return PlayerState(name, collectedCards, cardsInHand, false, channel)
 }
 
 fun PlayerState?.revive(): PlayerState? {
