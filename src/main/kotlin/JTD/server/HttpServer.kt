@@ -60,12 +60,12 @@ fun Application.httpServer() {
             }
 
             route("/{game_id}") {
-                get {
+                get("/state") {
                     val gameId = call.parameters["game_id"]
                     if (gameId == null) {
                         call.respond(HttpStatusCode.BadRequest)
                     } else {
-                        val gameState = GamesManager.getGameState(gameId.toInt())
+                        val gameState = GamesManager.getCardsOnTable(gameId.toInt())
                         call.respondOr404(gameState)
                     }
                 }

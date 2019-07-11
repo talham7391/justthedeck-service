@@ -1,5 +1,6 @@
 package JTD.game
 
+import JTD.game.state.CardOnTable
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.close
 import io.ktor.websocket.WebSocketServerSession
@@ -16,10 +17,10 @@ object GamesManager {
         return gameId
     }
 
-    suspend fun getGameState(gameId: Int): GameState? {
+    suspend fun getCardsOnTable(gameId: Int): List<CardOnTable>? {
         try {
             val game = ActiveGames.get(gameId)
-            return game.getState()
+            return game.getCardsOnTable()
         } catch (e: GameDoesNotExist) {
             return null
         }
