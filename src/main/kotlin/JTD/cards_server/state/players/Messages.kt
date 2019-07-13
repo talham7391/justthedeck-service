@@ -10,4 +10,9 @@ data class AddPlayerMessage(val name: String, val conn: WebSocketServerSession) 
 
 data class GetPlayersMessage(val players: CompletableDeferred<Collection<Player>>) : PlayersMessage()
 
+data class GetPlayerMessage(
+        val player: CompletableDeferred<Player>,
+        val conn: WebSocketServerSession
+) : PlayersMessage()
+
 data class RemoveConnectionMessage(val conn: WebSocketServerSession) : PlayersMessage()

@@ -1,5 +1,6 @@
 package JTD.cards_server
 
+import JTD.cards_server.state.players.CardOnTable
 import JTD.cards_server.state.players.DefaultPlayersManager
 import JTD.infrastructure.BaseGame
 import JTD.infrastructure.info
@@ -11,12 +12,15 @@ import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.websocket.WebSocketServerSession
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 
 
 class CardGame(override val id: Int) : BaseGame<Int>() {
     private val logger = LoggerFactory.getLogger(CardGame::class.java)
     private val objectMapper = ObjectMapper().registerModule(KotlinModule())
+
     private val playersManager = DefaultPlayersManager()
     private val cardGameActor = GlobalScope.cardGameActor(playersManager)
 
@@ -38,6 +42,16 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
     }
 
     override suspend fun WebSocketServerSession.handleActionFromClient(frame: Frame) {
+        val action = objectMapper.readValue<ClientAction>(frame.readBytes())
+
+        when(action.name) {
+            "PUT_CARDS_ON_TABLE" -> {
+                val putCardOnTableAction = objectMapper.readValue<PutCardsOnTableClientAction>(frame.readBytes())
+                val player = playersManager.getPlayer(this)
+                cardGameActor.send(PlayerPutCardsOnTable(player, putCardOnTableAction.data.cards))
+            }
+        }
+
     }
 
     override suspend fun WebSocketServerSession.teardown() {

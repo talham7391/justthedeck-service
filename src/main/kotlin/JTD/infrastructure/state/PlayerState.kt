@@ -6,8 +6,8 @@ import kotlinx.coroutines.channels.Channel
 
 data class PlayerState(
     val name: String,
-    val collectedCards: List<Card>,
-    val cardsInHand: List<Card>,
+    val collectedCards: List<Int>,
+    val cardsInHand: List<Int>,
 
     var isConnected: Boolean
 )
@@ -15,8 +15,8 @@ data class PlayerState(
 
 fun newPlayerState(
     name: String,
-    collectedCards: List<Card> = emptyList(),
-    cardsInHand: List<Card> = emptyList()
+    collectedCards: List<Int> = emptyList(),
+    cardsInHand: List<Int> = emptyList()
 ): PlayerState {
     return PlayerState(name, collectedCards, cardsInHand, false)
 }

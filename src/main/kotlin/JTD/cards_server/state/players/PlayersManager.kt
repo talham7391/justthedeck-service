@@ -10,6 +10,7 @@ import kotlinx.coroutines.channels.actor
 
 interface Player {
     val name: String
+    val cardsInHand: Collection<Card>
 
     var conn: WebSocketServerSession?
     val connected
@@ -19,15 +20,16 @@ interface Player {
 
 class PlayerImpl(
         override val name: String,
+        override val cardsInHand: Collection<Card>,
         @JsonIgnore override var conn: WebSocketServerSession?) : Player
 
-fun newPlayer(name: String, conn: WebSocketServerSession) = PlayerImpl(name, conn)
+fun newPlayer(name: String, conn: WebSocketServerSession): Player = PlayerImpl(name, emptyList(), conn)
 
 fun Player?.revive(newConn: WebSocketServerSession): Player? {
     if (this == null) {
         return null
     }
-    return PlayerImpl(name, newConn)
+    return PlayerImpl(name, cardsInHand, newConn)
 }
 
 
@@ -47,6 +49,12 @@ class DefaultPlayersManager {
         playersActor.send(GetPlayersMessage(players))
         return players.await()
     }
+
+    suspend fun getPlayer(conn: WebSocketServerSession): Player {
+        val player = CompletableDeferred<Player>()
+        playersActor.send(GetPlayerMessage(player, conn))
+        return player.await()
+    }
 }
 
 
@@ -62,14 +70,29 @@ fun CoroutineScope.playersActor() = actor<PlayersMessage> {
 
             is GetPlayersMessage -> { mssg.players.complete(players.values) }
 
-            is RemoveConnectionMessage -> {
-                for ((_, player) in players) {
-                    if (player.conn == mssg.conn) {
-                        player.conn = null
-                        break
-                    }
+            is GetPlayerMessage -> {
+                val player = players whoIsUsing mssg.conn
+                if (player == null) {
+                    mssg.player.completeExceptionally(PlayerNotFound())
+                } else {
+                    mssg.player.complete(player)
                 }
+            }
+
+            is RemoveConnectionMessage -> {
+                val player = players whoIsUsing mssg.conn
+                player?.conn = null
             }
         }
     }
+}
+
+
+infix fun Map<String, Player>.whoIsUsing(conn: WebSocketServerSession): Player? {
+    for ((_, player) in this) {
+        if (player.conn == conn) {
+            return player
+        }
+    }
+    return null
 }
