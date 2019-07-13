@@ -1,4 +1,4 @@
-package JTD.game.state
+package JTD.infrastructure.state
 
 
 interface Card {

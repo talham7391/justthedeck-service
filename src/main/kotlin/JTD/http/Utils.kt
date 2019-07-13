@@ -1,4 +1,4 @@
-package JTD.server
+package JTD.http
 
 import io.ktor.application.ApplicationCall
 import io.ktor.http.HttpStatusCode

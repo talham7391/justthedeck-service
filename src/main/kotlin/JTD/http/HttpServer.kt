@@ -1,11 +1,9 @@
-package JTD.server
+package JTD.http
 
-import JTD.game.GamesManager
-import JTD.game.handleConnection
+import JTD.infrastructure.GameManager
 import io.ktor.application.*
 import io.ktor.features.CallId
 import io.ktor.features.ContentNegotiation
-import io.ktor.features.callId
 import io.ktor.http.HttpStatusCode
 import io.ktor.jackson.jackson
 import io.ktor.request.httpMethod
@@ -15,16 +13,16 @@ import io.ktor.routing.get
 import io.ktor.routing.post
 import io.ktor.routing.route
 import io.ktor.routing.routing
-import io.ktor.websocket.WebSocketServerSession
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import kotlinx.coroutines.delay
 import java.time.Duration
-import java.util.*
 import kotlin.random.Random
 
 
-fun Application.httpServer() {
+fun <T> Application.httpServer(
+        gameManager: GameManager<T>
+) {
     install(WebSockets) {
         pingPeriod = Duration.ofSeconds(5)
     }
@@ -48,32 +46,43 @@ fun Application.httpServer() {
             call.respond(HttpStatusCode.OK)
         }
 
-        get("/test") {
-            delay(1000L)
-            call.respond("Hello, World!")
+        route("/test") {
+            get {
+                delay(1000L)
+                call.respond("Hello, World!")
+            }
         }
 
         route("/games") {
             post {
-                val gameId = GamesManager.createGame()
-                call.respond(GamePostResponse(gameId))
+                val game = gameManager.newGame()
+                call.respond(GamePostResponse(game.id.toString()))
             }
 
-            route("/{game_id}") {
-                get("/state") {
-                    val gameId = call.parameters["game_id"]
+            route("/{gameId}") {
+                get {
+                    val gameId = call.parameters["gameId"]
                     if (gameId == null) {
                         call.respond(HttpStatusCode.BadRequest)
                     } else {
-                        val gameState = GamesManager.getCardsOnTable(gameId.toInt())
-                        call.respondOr404(gameState)
+                        try {
+                            gameManager.getGame(gameId)
+                            call.respond(HttpStatusCode.OK)
+                        } catch (e: Exception) {
+                            call.respond(HttpStatusCode.NotFound)
+                        }
                     }
                 }
             }
         }
 
-        webSocket("/ws/{game_id}", handler = WebSocketServerSession::handleConnection)
+        webSocket("/ws/{gameId}") {
+            val gameId = call.parameters["gameId"]
+            if (gameId != null) {
+                gameManager.handleConnection(gameId, this)
+            }
+        }
     }
 }
 
-data class GamePostResponse(val gameId: Int)
+data class GamePostResponse(val gameId: String)

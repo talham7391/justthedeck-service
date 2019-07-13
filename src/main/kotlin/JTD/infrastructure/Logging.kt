@@ -1,4 +1,4 @@
-package JTD.game
+package JTD.infrastructure
 
 import org.slf4j.Logger
 
