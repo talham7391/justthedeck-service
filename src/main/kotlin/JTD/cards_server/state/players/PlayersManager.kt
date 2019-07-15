@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.actor
 interface Player {
     val name: String
     val cardsInHand: Collection<Card>
+    val joinOrder: Int
 
     var conn: WebSocketServerSession?
     val connected
@@ -20,16 +21,23 @@ interface Player {
 
 class PlayerImpl(
         override val name: String,
+        override val joinOrder: Int,
         override val cardsInHand: Collection<Card>,
         @JsonIgnore override var conn: WebSocketServerSession?) : Player
 
-fun newPlayer(name: String, conn: WebSocketServerSession): Player = PlayerImpl(name, emptyList(), conn)
+
+fun newPlayer(
+        name: String,
+        joinOrder: Int,
+        conn: WebSocketServerSession
+): Player = PlayerImpl(name, joinOrder, emptyList(), conn)
+
 
 fun Player?.revive(newConn: WebSocketServerSession): Player? {
     if (this == null) {
         return null
     }
-    return PlayerImpl(name, cardsInHand, newConn)
+    return PlayerImpl(name, joinOrder, cardsInHand, newConn)
 }
 
 
@@ -65,7 +73,9 @@ fun CoroutineScope.playersActor() = actor<PlayersMessage> {
         when (mssg) {
 
             is AddPlayerMessage -> {
-                players[mssg.name] = players[mssg.name].revive(mssg.conn) ?: newPlayer(mssg.name, mssg.conn)
+                val joinOrder = players.size
+                players[mssg.name] =
+                        players[mssg.name].revive(mssg.conn) ?: newPlayer(mssg.name, joinOrder, mssg.conn)
             }
 
             is GetPlayersMessage -> { mssg.players.complete(players.values) }
