@@ -1,5 +1,6 @@
 package JTD.cards_server
 
+import JTD.cards_server.card.Card
 import JTD.cards_server.card.CardOnTable
 
 
@@ -16,4 +17,4 @@ data class PutCardsOnTableActionData(val cards: Collection<CardOnTable>)
 data class RemoveCardsFromHandClientAction(
         override val data: RemoveCardsFromHandActionData
 ) : ClientAction("REMOVE_CARDS_FROM_HAND", data)
-data class RemoveCardsFromHandActionData(val cards: Collection<CardOnTable>)
+data class RemoveCardsFromHandActionData(val cards: Collection<Card>)

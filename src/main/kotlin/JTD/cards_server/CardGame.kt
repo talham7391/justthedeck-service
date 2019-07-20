@@ -52,8 +52,7 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
             "REMOVE_CARDS_FROM_HAND" -> {
                 val removeCardsFromHandAction = objectMapper.readValue<RemoveCardsFromHandClientAction>(frame.readBytes())
                 val player = playersManager.getPlayer(this)
-                // remove the cards from the players hand
-//                cardGameActor.send(PlayerPutCardsOnTable(player, putCardOnTableAction.data.cards))
+                player.removeCardsFromHand(removeCardsFromHandAction.data.cards)
             }
         }
 

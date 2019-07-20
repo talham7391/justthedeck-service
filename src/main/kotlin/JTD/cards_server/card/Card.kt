@@ -5,7 +5,12 @@ open class Card (
         open val type: String,
         open val suit: String,
         open val value: String
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        val c = other as? Card ?: return false
+        return type == c.type && suit == c.suit && value == c.value
+    }
+}
 
 
 data class CardOnTable(
