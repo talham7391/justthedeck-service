@@ -1,7 +1,8 @@
 package JTD.cards_server
 
-import JTD.cards_server.state.players.CardOnTable
-import JTD.cards_server.state.players.Player
+import JTD.cards_server.card.Card
+import JTD.cards_server.card.CardOnTable
+import JTD.cards_server.player.Player
 
 
 open class ServerAction(val name: String)
@@ -14,3 +15,7 @@ data class PlayerCardsOnTableServerAction(
         val playerName: String,
         val cards: Collection<CardOnTable>
 ) : ServerAction("PLAYER_PUT_CARDS_ON_TABLE")
+
+data class GiveCardsToPlayersHandServerAction(
+        val cards: Collection<Card>
+) : ServerAction("PUT_CARDS_IN_HAND")

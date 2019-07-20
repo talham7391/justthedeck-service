@@ -1,6 +1,5 @@
-package JTD.cards_server.state.players
+package JTD.cards_server.player
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import io.ktor.websocket.WebSocketServerSession
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -8,44 +7,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.actor
 
 
-interface Player {
-    val name: String
-    val cardsInHand: Collection<Card>
-    val joinOrder: Int
-
-    var conn: WebSocketServerSession?
-    val connected
-        get() = conn != null
-}
-
-
-class PlayerImpl(
-        override val name: String,
-        override val joinOrder: Int,
-        override val cardsInHand: Collection<Card>,
-        @JsonIgnore override var conn: WebSocketServerSession?) : Player
-
-
-fun newPlayer(
-        name: String,
-        joinOrder: Int,
-        conn: WebSocketServerSession
-): Player = PlayerImpl(name, joinOrder, emptyList(), conn)
-
-
-fun Player?.revive(newConn: WebSocketServerSession): Player? {
-    if (this == null) {
-        return null
-    }
-    return PlayerImpl(name, joinOrder, cardsInHand, newConn)
-}
-
-
 class DefaultPlayersManager {
     private val playersActor = GlobalScope.playersActor()
 
-    suspend fun addPlayer(name: String, conn: WebSocketServerSession) {
-        playersActor.send(AddPlayerMessage(name, conn))
+    suspend fun addPlayer(name: String, conn: WebSocketServerSession): Player {
+        val player = CompletableDeferred<Player>()
+        playersActor.send(AddPlayerMessage(name, conn, player))
+        return player.await()
     }
 
     suspend fun removeConnection(conn: WebSocketServerSession) {
@@ -73,9 +41,12 @@ fun CoroutineScope.playersActor() = actor<PlayersMessage> {
         when (mssg) {
 
             is AddPlayerMessage -> {
-                val joinOrder = players.size
-                players[mssg.name] =
-                        players[mssg.name].revive(mssg.conn) ?: newPlayer(mssg.name, joinOrder, mssg.conn)
+                if (mssg.name in players) {
+                    players[mssg.name]?.conn = mssg.conn
+                } else {
+                    players[mssg.name] = newPlayer(mssg.name, players.size, mssg.conn)
+                }
+                mssg.player.complete(players[mssg.name]!!)
             }
 
             is GetPlayersMessage -> { mssg.players.complete(players.values) }

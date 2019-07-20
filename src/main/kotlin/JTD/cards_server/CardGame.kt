@@ -1,7 +1,6 @@
 package JTD.cards_server
 
-import JTD.cards_server.state.players.CardOnTable
-import JTD.cards_server.state.players.DefaultPlayersManager
+import JTD.cards_server.player.DefaultPlayersManager
 import JTD.infrastructure.BaseGame
 import JTD.infrastructure.info
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -12,8 +11,6 @@ import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readBytes
 import io.ktor.websocket.WebSocketServerSession
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 
 
@@ -31,8 +28,9 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
         if (action.name == "SET_NAME") {
             val setNameAction = objectMapper.readValue<SetNameClientAction>(frame.readBytes())
             val name = setNameAction.data.name
-            playersManager.addPlayer(name, this)
+            val player = playersManager.addPlayer(name, this)
 
+            player.shareCardsWithSelf()
             cardGameActor.send(SharePlayers)
             logger.info(id, call.callId, "Player Joined: $name.")
 
@@ -49,6 +47,13 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
                 val putCardOnTableAction = objectMapper.readValue<PutCardsOnTableClientAction>(frame.readBytes())
                 val player = playersManager.getPlayer(this)
                 cardGameActor.send(PlayerPutCardsOnTable(player, putCardOnTableAction.data.cards))
+            }
+
+            "REMOVE_CARDS_FROM_HAND" -> {
+                val removeCardsFromHandAction = objectMapper.readValue<RemoveCardsFromHandClientAction>(frame.readBytes())
+                val player = playersManager.getPlayer(this)
+                // remove the cards from the players hand
+//                cardGameActor.send(PlayerPutCardsOnTable(player, putCardOnTableAction.data.cards))
             }
         }
 

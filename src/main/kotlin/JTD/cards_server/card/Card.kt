@@ -1,4 +1,4 @@
-package JTD.cards_server.state.players
+package JTD.cards_server.card
 
 
 open class Card (

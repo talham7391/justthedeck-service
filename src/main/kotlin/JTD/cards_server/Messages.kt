@@ -1,7 +1,8 @@
 package JTD.cards_server
 
-import JTD.cards_server.state.players.CardOnTable
-import JTD.cards_server.state.players.Player
+import JTD.cards_server.card.Card
+import JTD.cards_server.card.CardOnTable
+import JTD.cards_server.player.Player
 
 
 sealed class CardGameMessage
@@ -16,3 +17,8 @@ data class PlayerPutCardsOnTable(
 ) : CardGameMessage()
 
 object ShareCardsOnTable : CardGameMessage()
+
+data class GiveCardsToPlayersHand(
+        val player: Player,
+        val cards: Collection<Card>
+) : CardGameMessage()
