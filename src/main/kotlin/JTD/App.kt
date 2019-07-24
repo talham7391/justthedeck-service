@@ -8,6 +8,10 @@ import io.ktor.server.netty.Netty
 
 fun main() {
     val gameManager = CardGameManager()
-    val server = embeddedServer(Netty, port = 8000) { httpServer(gameManager) }
+    val server = embeddedServer(
+            Netty,
+            host = "0.0.0.0",
+            port = 8000
+    ) { httpServer(gameManager) }
     server.start(wait = true)
 }

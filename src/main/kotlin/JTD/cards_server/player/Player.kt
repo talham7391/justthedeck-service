@@ -74,10 +74,6 @@ fun CoroutineScope.playerActor(player: Player) = actor<PlayerMessage> {
     val cardsInHand = mutableListOf<Card>()
     val cardsInCollection = mutableListOf<Card>()
 
-    cardsInHand.add(Card("normal", "hearts", "6"))
-    cardsInHand.add(Card("normal", "spades", "queen"))
-    cardsInHand.add(Card("normal", "diamonds", "ace"))
-
     for (mssg in channel) {
         when (mssg) {
             is ShareCardsInHandWithSelf -> {

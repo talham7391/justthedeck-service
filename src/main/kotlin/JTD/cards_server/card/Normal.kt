@@ -21,6 +21,17 @@ val NORMAL_VALUES = listOf(
 )
 
 
+fun fullNormalDeck(): Collection<Card> {
+    val deck = mutableListOf<Card>()
+    for (suit in NORMAL_SUITS) {
+        for (value in NORMAL_VALUES) {
+            deck.add(Card("normal", suit, value))
+        }
+    }
+    return deck
+}
+
+
 fun randomNormalCard(): Card {
     return Card(
             "normal",

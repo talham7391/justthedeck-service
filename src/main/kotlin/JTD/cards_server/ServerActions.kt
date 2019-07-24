@@ -11,11 +11,6 @@ data class PlayersServerAction(val players: Collection<Player>) : ServerAction("
 
 data class CardsOnTableServerAction(val cards: Collection<CardOnTable>) : ServerAction("PUT_CARDS_ON_TABLE")
 
-data class PlayerCardsOnTableServerAction(
-        val playerName: String,
-        val cards: Collection<CardOnTable>
-) : ServerAction("PLAYER_PUT_CARDS_ON_TABLE")
-
 data class GiveCardsToPlayersHandServerAction(
         val cards: Collection<Card>
 ) : ServerAction("PUT_CARDS_IN_HAND")

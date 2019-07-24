@@ -11,10 +11,7 @@ object SharePlayers : CardGameMessage()
 
 data class PutCardsOnTable(val cards: Collection<CardOnTable>) : CardGameMessage()
 
-data class PlayerPutCardsOnTable(
-        val player: Player,
-        val cards: Collection<CardOnTable>
-) : CardGameMessage()
+data class RemoveCardsOnTable(val cards: Collection<CardOnTable>) : CardGameMessage()
 
 object ShareCardsOnTable : CardGameMessage()
 

@@ -10,6 +10,10 @@ fun CoroutineScope.cardGameActor(playersManager: DefaultPlayersManager) = actor<
 
     val cardsOnTable = mutableListOf<CardOnTable>()
 
+    suspend fun shareCardsWithPlayers() {
+        playersManager.sendToPlayers(CardsOnTableServerAction(cardsOnTable))
+    }
+
     for (mssg in channel) {
         when (mssg) {
             is SharePlayers -> {
@@ -19,17 +23,15 @@ fun CoroutineScope.cardGameActor(playersManager: DefaultPlayersManager) = actor<
 
             is PutCardsOnTable -> {
                 cardsOnTable.addAll(mssg.cards)
-                playersManager.sendToPlayers(CardsOnTableServerAction(mssg.cards))
+                shareCardsWithPlayers()
             }
 
-            is PlayerPutCardsOnTable -> {
-                cardsOnTable.addAll(mssg.cards)
-                playersManager.sendToPlayers(PlayerCardsOnTableServerAction(mssg.player.name, mssg.cards))
+            is RemoveCardsOnTable -> {
+                cardsOnTable.removeAll(mssg.cards)
+                shareCardsWithPlayers()
             }
 
-            is ShareCardsOnTable -> {
-                playersManager.sendToPlayers(CardsOnTableServerAction(cardsOnTable))
-            }
+            is ShareCardsOnTable -> { shareCardsWithPlayers() }
 
             is GiveCardsToPlayersHand -> {
                 mssg.player.addCardsToHand(mssg.cards)
