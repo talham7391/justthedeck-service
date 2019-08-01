@@ -29,6 +29,7 @@ interface Player {
 
     suspend fun getCardsinCollection(): Collection<Card>
     suspend fun addCardsToCollection(cards: Collection<Card>)
+    suspend fun removeCardsFromCollection(cards: Collection<Card>)
 }
 
 
@@ -67,6 +68,10 @@ private class PlayerImpl(
     override suspend fun addCardsToCollection(cards: Collection<Card>) {
         playerActor.send(AddCardsToCollectionMessage(cards))
     }
+
+    override suspend fun removeCardsFromCollection(cards: Collection<Card>) {
+        playerActor.send(RemoveCardsFromCollectionMessage(cards))
+    }
 }
 
 
@@ -78,6 +83,7 @@ fun CoroutineScope.playerActor(player: Player) = actor<PlayerMessage> {
         when (mssg) {
             is ShareCardsInHandWithSelf -> {
                 player.send(CardsInHand(cardsInHand))
+                player.send(CardsInCollectionServerAction(cardsInCollection))
             }
 
             is GetCardsInHandMessage -> { mssg.cards.complete(cardsInHand) }
@@ -94,7 +100,15 @@ fun CoroutineScope.playerActor(player: Player) = actor<PlayerMessage> {
 
             is GetCardsInCollectionMessage -> { mssg.cards.complete(cardsInCollection) }
 
-            is AddCardsToCollectionMessage -> { cardsInCollection.addAll(mssg.cards) }
+            is AddCardsToCollectionMessage -> {
+                cardsInCollection.addAll(mssg.cards)
+                player.send(CardsInCollectionServerAction(cardsInCollection))
+            }
+
+            is RemoveCardsFromCollectionMessage -> {
+                cardsInCollection.removeAll(mssg.cards)
+                player.send(CardsInCollectionServerAction(cardsInCollection))
+            }
         }
     }
 }

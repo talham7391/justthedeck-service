@@ -37,3 +37,5 @@ data class RemoveCardsFromHandMessage(val cards: Collection<Card>) : PlayerMessa
 data class GetCardsInCollectionMessage(val cards: CompletableDeferred<Collection<Card>>) : PlayerMessage()
 
 data class AddCardsToCollectionMessage(val cards: Collection<Card>) : PlayerMessage()
+
+data class RemoveCardsFromCollectionMessage(val cards: Collection<Card>) : PlayerMessage()

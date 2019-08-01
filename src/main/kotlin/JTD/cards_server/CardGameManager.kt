@@ -21,7 +21,7 @@ class CardGameManager : BaseGameManager<Int>() {
     }
 
     override suspend fun createGame(id: Int): Game<Int> {
-        return CardGame(id)
+        return CardGame(id).apply { pregame() }
     }
 
     override fun newId(i: Int) = i

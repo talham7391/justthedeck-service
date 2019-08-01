@@ -13,3 +13,7 @@ data class PutCardsInHandServerAction(
 data class RemoveCardsFromHandServerAction(
         val cards: Collection<Card>
 ) : ServerAction("REMOVE_CARDS_FROM_HAND")
+
+data class CardsInCollectionServerAction(
+        val cards: Collection<Card>
+) : ServerAction("CARDS_IN_COLLECTION")

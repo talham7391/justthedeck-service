@@ -32,3 +32,21 @@ data class RemoveCardsFromTableClientAction(
         override val data: RemoveCardsFromTableActionData
 ) : ClientAction("REMOVE_CARDS_FROM_TABLE", data)
 data class RemoveCardsFromTableActionData(val cards: Collection<CardOnTable>)
+
+
+data class AddCardsToCollectionClientAction(
+        override val data: AddCardsToCollectionActionData
+) : ClientAction("ADD_CARDS_TO_COLLECTION", data)
+data class AddCardsToCollectionActionData(val cards: Collection<Card>)
+
+
+data class RemoveCardsFromCollectionClientAction(
+        override val data: RemoveCardsFromCollectionActionData
+) : ClientAction("REMOVE_CARDS_FROM_COLLECTION", data)
+data class RemoveCardsFromCollectionActionData(val cards: Collection<Card>)
+
+
+data class DistributeCardsClientAction(
+        override val data: DistributeCardsActionData
+) : ClientAction("DISTRIBUTE_CARDS", data)
+data class DistributeCardsActionData(val cards: Collection<Card>)

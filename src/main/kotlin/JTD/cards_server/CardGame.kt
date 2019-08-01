@@ -24,7 +24,18 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
     private val playersManager = DefaultPlayersManager()
     private val cardGameActor = GlobalScope.cardGameActor(playersManager)
 
-    private val cards = fullNormalDeck().toMutableList()
+    suspend fun pregame() {
+        cardGameActor.send(PutCardsOnTable(fullNormalDeck().map {
+            return@map CardOnTable(
+                    it.type,
+                    it.suit,
+                    it.value,
+                    "face_down",
+                    Location(0f, 0f),
+                    null
+            )
+        }))
+    }
 
     override suspend fun WebSocketServerSession.setup() {
         val frame = incoming.receive()
@@ -33,14 +44,11 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
         if (action.name == "SET_NAME") {
             val setNameAction = objectMapper.readValue<SetNameClientAction>(frame.readBytes())
             val name = setNameAction.data.name
-            val player = playersManager.addPlayer(name, this)
-
-            player.addCardsToHand(cards.randomlyTake(5))
+            playersManager.addPlayer(name, this)
 
             cardGameActor.send(SharePlayers)
             cardGameActor.send(ShareCardsOnTable)
             logger.info(id, call.callId, "Player Joined: $name.")
-
         } else {
             throw UnexpectedResponse(action.name, "SET_NAME")
         }
@@ -70,6 +78,39 @@ class CardGame(override val id: Int) : BaseGame<Int>() {
             "REMOVE_CARDS_FROM_TABLE" -> {
                 val removeCardsFromTableAction = objectMapper.readValue<RemoveCardsFromTableClientAction>(frame.readBytes())
                 cardGameActor.send(RemoveCardsOnTable(removeCardsFromTableAction.data.cards))
+            }
+
+            "ADD_CARDS_TO_COLLECTION" -> {
+                val addCardsToCollectionAction = objectMapper.readValue<AddCardsToCollectionClientAction>(frame.readBytes())
+                val player = playersManager.getPlayer(this)
+                player.addCardsToCollection(addCardsToCollectionAction.data.cards)
+
+            }
+
+            "REMOVE_CARDS_FROM_COLLECTION" -> {
+                val removeCardsFromCollectionAction = objectMapper.readValue<RemoveCardsFromCollectionClientAction>(frame.readBytes())
+                val player = playersManager.getPlayer(this)
+                player.removeCardsFromCollection(removeCardsFromCollectionAction.data.cards)
+            }
+
+            "DISTRIBUTE_CARDS" -> {
+                val distributeCardsAction = objectMapper.readValue<DistributeCardsClientAction>(frame.readBytes())
+                val players = playersManager.getPlayers().toList()
+
+                val cards = distributeCardsAction.data.cards.toMutableList()
+
+                val cardsForPlayer = players.map { mutableListOf<Card>() }
+
+                var idx = 0
+                while (cards.size > 0) {
+                    val playerIdx = idx % players.size
+                    cardsForPlayer[playerIdx].add(cards.randomlyTake(1)[0])
+                    idx++
+                }
+
+                for (i in 0 until cardsForPlayer.size) {
+                    players[i].addCardsToHand(cardsForPlayer[i])
+                }
             }
         }
 
